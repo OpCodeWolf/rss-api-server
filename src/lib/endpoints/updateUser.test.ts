@@ -18,7 +18,7 @@ describe('PUT /update_user', () => {
     const response = await request(app)
       .post('/update_user')
       .set('Authorization', `${token}`)
-      .send({ username: 'admin', password: 'admin', new_password: 'newpassword', verify_password: 'newpassword' });
+      .send({ username: 'admin', password: 'admin123', new_password: 'newpassword', verify_password: 'newpassword' });
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('User updated successfully');
   });
@@ -37,7 +37,7 @@ describe('PUT /update_user', () => {
     const response = await request(app)
       .post('/update_user')
       .set('Authorization', `${token}`)
-      .send({ username: 'admin', password: 'newpassword', new_password: 'admin', verify_password: 'admin' }); // Resetting to original password
+      .send({ username: 'admin', password: 'newpassword', new_password: 'admin', verify_password: 'admin123' }); // Resetting to original password
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('User updated successfully');
   });
