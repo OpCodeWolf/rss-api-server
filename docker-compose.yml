@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  rss-api-server:
+    container_name: rss-api-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # Adjust the port as necessary
+    restart: always
+    # volumes:
+    #   - .:/app  # Mount the current directory to /app in the container
+    environment:
+      NODE_ENV: production  # Set the environment variable as needed
