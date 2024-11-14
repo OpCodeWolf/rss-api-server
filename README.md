@@ -77,7 +77,7 @@ Once you have obtained the token from the login response, you can use it to make
 To include the token in your requests, add it to the `Authorization` header as follows:
 
 ```
-Authorization: Bearer <your_token>
+Authorization: <your_token>
 ```
 
 ### Example of an Authenticated Request
