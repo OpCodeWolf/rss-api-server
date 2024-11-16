@@ -10,7 +10,9 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
   - **200**: 
     ```json
     {
-      "message": "Welcome to the RSS API Server"
+      "version": "1.0.0", 
+      "description": "RSS News Feed Server.", 
+      "status": "ok"
     }
     ```
   - **500**: 
@@ -46,7 +48,19 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 3. GET /rss_streams
+## 3. GET /opml
+- **Summary**: Retrieve the OPML file
+  - This endpoint generates and returns the OPML file containing the RSS feed links.
+- **Responses**:
+  - **200**: Returns the OPML file in XML format.
+  - **500**: 
+    ```json
+    {
+      "error": "Failed to generate OPML file"
+    }
+    ```
+
+## 4. GET /rss_streams
 - **Summary**: Get all RSS streams
   - This endpoint retrieves a list of all RSS streams that have been added to the server. It returns an array of stream objects, each containing an ID and a link to the RSS feed.
 - **Responses**:
@@ -70,7 +84,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 4. POST /rss_streams
+## 5. POST /rss_streams
 - **Summary**: Add an RSS stream
   - This endpoint allows users to add a new RSS stream by providing a link to the feed. It validates the input and, if successful, stores the stream in the database.
 - **Request Body**:
@@ -99,7 +113,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 5. DELETE /rss_streams/{id}
+## 6. DELETE /rss_streams/{id}
 - **Summary**: Delete an RSS stream by ID
   - This endpoint allows users to delete an existing RSS stream by specifying its ID. If the stream is successfully deleted, a 204 No Content response is returned.
 - **Parameters**:
@@ -119,7 +133,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 6. POST /rss_update_streams
+## 7. POST /rss_update_streams
 - **Summary**: Update RSS feeds
   - This endpoint triggers an update of the RSS feeds. It can be used to refresh the content of the feeds based on the stored links. A successful update will return a confirmation message.
 - **Responses**:
@@ -136,7 +150,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 7. GET /rss_items
+## 8. GET /rss_items
 - **Summary**: Get all RSS items
   - This endpoint retrieves all items from the RSS feeds. It supports pagination and ordering by publication date, allowing clients to fetch items in a structured manner.
 - **Parameters**:
@@ -166,8 +180,8 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 8. DELETE /rss_items/{id}
-- **Summary**: Delete an RSS item by ID
+## 9. DELETE /rss_items/{id}
+- **Summary**: Delete a RSS item by ID
   - This endpoint allows users to delete a specific RSS item by its ID. A successful deletion will return a confirmation message.
 - **Parameters**:
   - id: integer (required)
@@ -185,7 +199,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 9. POST /rss_items
+## 10. POST /rss_items
 - **Summary**: Update RSS items
   - This endpoint allows users to update existing RSS items by providing the necessary details in the request body. It can handle both single item updates and bulk updates.
 - **Request Body**:
@@ -214,7 +228,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 10. POST /login
+## 11. POST /login
 - **Summary**: User login
   - This endpoint authenticates users by validating their credentials. Upon successful login, it returns a token that can be used for subsequent requests requiring authentication.
 - **Request Body**:
@@ -248,7 +262,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 11. POST /logout
+## 12. POST /logout
 - **Summary**: User logout
   - This endpoint logs the user out of the session. It invalidates the session token, ensuring that the user can no longer access protected resources without logging in again.
 - **Responses**:
@@ -265,7 +279,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 12. POST /create_user
+## 13. POST /create_user
 - **Summary**: Create a new user
   - This endpoint allows for the registration of a new user by providing a username and password. It checks for existing usernames to prevent duplicates and returns the newly created user's ID upon success.
 - **Request Body**:
@@ -299,7 +313,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 13. POST /update_user
+## 14. POST /update_user
 - **Summary**: Allows an admin to update a user's account
   - This endpoint enables administrators to modify user details, including username, password, and user level. It requires authentication and proper permissions to execute.
 - **Request Body**:
@@ -320,7 +334,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 14. DELETE /delete_user/{username}
+## 15. DELETE /delete_user/{username}
 - **Summary**: Delete a user by username
   - This endpoint allows administrators to delete a user account by specifying the username. It ensures that the user is removed from the system entirely.
 - **Parameters**:
@@ -340,7 +354,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 15. POST /encrypt
+## 16. POST /encrypt
 - **Summary**: Encrypt a string using bcrypt
   - This endpoint provides functionality to encrypt a given string (typically a password) using bcrypt. It returns the hashed value, which can be stored securely.
 - **Request Body**:
@@ -361,7 +375,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     }
     ```
 
-## 16. GET /users
+## 17. GET /users
 - **Summary**: List all users with pagination
   - This endpoint retrieves a paginated list of all users in the system. It can be used by administrators to view user accounts and their associated details.
 - **Parameters**:
