@@ -21,9 +21,9 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
                 },
                 channel: [
                     {
-                        title: 'Latest',
-                        link: '/rss',
-                        description: 'The latest news from around the world.',
+                        title: process.env.TITLE || 'Default Title', // Use the TITLE from the environment variable or a default
+                        link: process.env.SERVER_URL + '/rss', // Use the SERVER_URL from the environment variable
+                        description: process.env.DESCRIPTION || 'Default description', // Use the DESCRIPTION from the environment variable or a default
                         item: rssItems.map(item => ({
                             title: item.title,
                             link: item.link,
@@ -33,18 +33,20 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
                                 _: `<a href="${item.link}">Comments</a>`,
                                 $: { 'cdata': true }
                             },
-                            enclosure: {
-                                $: {
-                                    url: item.image,
-                                    type: 'image/jpeg'
+                            ...(item.image ? {
+                                enclosure: {
+                                    $: {
+                                        url: item.image,
+                                        type: 'image/jpeg'
+                                    }
+                                },
+                                'media:content': {
+                                    $: {
+                                        url: item.image,
+                                        type: 'image/jpeg'
+                                    }
                                 }
-                            },
-                            'media:content': {
-                                $: {
-                                    url: item.image,
-                                    type: 'image/jpeg'
-                                }
-                            }
+                            } : {})
                         }))
                     }
                 ]
