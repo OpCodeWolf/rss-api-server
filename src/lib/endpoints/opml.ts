@@ -11,7 +11,7 @@ export const getOpmlHandler = async (req: Request, res: Response) => {
                         $: {
                             text: process.env.OPML_TITLE || 'RSS Feed', // Use the OPML_TITLE from the environment variable or a default
                             type: 'rss',
-                            xmlUrl: `http://${process.env.SERVER_URL}/rss`
+                            xmlUrl: `${process.env.SERVER_URL}/rss`
                         }
                     }
                 }
