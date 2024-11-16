@@ -2,6 +2,8 @@
 
 This RSS-API-Server is a Node.js-based API server built with TypeScript. It provides various endpoints for managing RSS feeds and user authentication, utilizing SQLite for data storage. The server is designed to be lightweight and efficient, making it suitable for integration with various applications.
 
+![Alt text](/resources/img/RSS-API-Server-Screenshot.png?raw=true "RSS API Server Swagger Screenshot")
+
 ## Installation
 To install the project, follow these steps:
 
