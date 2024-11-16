@@ -9,13 +9,13 @@ const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
-      title: 'RSS API Server',
-      version: '1.0.0',
-      description: 'API documentation',
+      title: process.env.TITLE || 'RSS API Server', // Use the TITLE from the environment variable or a default
+      version: process.env.VERSION || '1.0.0', // Use the VERSION from the environment variable or a default
+      description: process.env.DESCRIPTION || 'API documentation', // Use the DESCRIPTION from the environment variable or a default
     },
     servers: [
       {
-        url: 'http://localhost:3000', // Update this URL based on your server configuration
+        url: `http://${process.env.DOMAIN_NAME}`, // Update this URL based on your server configuration
       },
     ],
     components: {
