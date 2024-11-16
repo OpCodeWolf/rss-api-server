@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { createUser } from '../database';
-import bcrypt from 'bcrypt';
+import * as databasae from '../database';
 import { UserLevel } from '../../types/UserLevel'; // Updated import path
+import { User } from '../../types/User';
 
-export const createUserHandler = async (req: Request, res: Response) => {
+export const createUserHandler = async (req: Request, res: Response): Promise<any> => {
     const { username, password } = req.body;
 
     if (!username || !password) {
@@ -11,9 +11,13 @@ export const createUserHandler = async (req: Request, res: Response) => {
     }
 
     try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await createUser(username, hashedPassword, UserLevel.USER);
-        res.status(201).json({ message: 'User created successfully' });
+        // Create the user
+        const user = await databasae.createUser(username, password, UserLevel.USER);
+
+        res.status(201).json({ 
+            message: 'User created successfully',
+            token: user.token
+        });
     } catch (error: any) {
         if (error.message.includes('UNIQUE constraint failed')) {
             return res.status(409).json({ error: 'Username already exists' }); // Change this later as this should not be shown to the public
