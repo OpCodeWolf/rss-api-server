@@ -1,7 +1,10 @@
 import sqlite3 from 'sqlite3';
 import axios from 'axios';
 import xml2js from 'xml2js';
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import { UserLevel } from '../types/UserLevel';
+import { User } from '../types/User';
 
 const db = new sqlite3.Database('rss.db');
 
@@ -39,7 +42,7 @@ db.serialize(() => {
       VALUES ('admin', '$2b$10$5cPFT52RiZJrH5GDta6T5OTEu60iOFs7pyrVr/HB9LECz3NANXg4W', '12345-12345-12345-12345', 'superadmin')`,
     (err) => {
       if (err && err.message.includes('SQLITE_CONSTRAINT')) {
-        console.log(`Super admin user already exists in the database.`);
+        // Intentionally left blank
       } else if (err) {
         console.log(`Database error: ${err}`);
       } else {
@@ -48,6 +51,20 @@ db.serialize(() => {
     }
   );
 });
+
+// New function to get all users with pagination
+export const getAllUsers = (page: number = 1, pageSize: number = 10): Promise<{ id: number; username: string; user_level: string }[]> => {
+  const offset = (page - 1) * pageSize;
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT id, username, user_level FROM users LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; username: string; user_level: string }[]) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+};
 
 interface RssFeed {
   rss: {
@@ -248,13 +265,23 @@ export const getUserByUsername = (username: string): Promise<{ id: number; usern
 };
 
 // New function to create a user
-export const createUser = (username: string, password: string, user_level: UserLevel): Promise<void> => {
+export const createUser = async (username: string, password: string, user_level: UserLevel): Promise<User> => {
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  // Create a random token for the user
+  const token = uuidv4();
+  await updateUserToken(username, token);
+          
   return new Promise((resolve, reject) => {
-    db.run(`INSERT INTO users (username, password, user_level) VALUES (?, ?, ?)`, [username, password, user_level.toString()], function (err: Error | null) {
+    db.run(`INSERT INTO users (username, password, user_level) VALUES (?, ?, ?)`, [username, hashedPassword, user_level.toString()], function (err: Error | null) {
       if (err) {
         reject(err);
       } else {
-        resolve();
+        resolve({
+          username: username,
+          password: hashedPassword,
+          token: token
+        });
       }
     });
   });

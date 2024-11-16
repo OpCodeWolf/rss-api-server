@@ -19,6 +19,7 @@ import { createUserHandler } from './endpoints/createUser';
 import { updateUserHandler } from './endpoints/updateUser';
 import { encryptHandler } from './endpoints/encrypt';
 import { deleteUserHandler } from './endpoints/deleteUser';
+import { getUsersHandler } from './endpoints/rss'; // Importing the getUsersHandler
 
 // Extend the Express Request interface to include session
 interface Request extends ExpressRequest {
@@ -476,8 +477,48 @@ export default class RssServer {
      *         description: Input string is required
      */
     this.app.post('/encrypt', encryptHandler); // Updated encrypt endpoint
-  }
 
+    /**
+     * @swagger
+     * /users:
+     *   get:
+     *     summary: List all users with pagination
+     *     parameters:
+     *       - name: page
+     *         in: query
+     *         required: false
+     *         description: Page number for pagination
+     *         schema:
+     *           type: integer
+     *           default: 1
+     *       - name: page_size
+     *         in: query
+     *         required: false
+     *         description: Number of users per page
+     *         schema:
+     *           type: integer
+     *           default: 10
+     *     responses:
+     *       200:
+     *         description: Successful response with user data
+     *         content:
+     *           application/json:
+     *             schema:
+     *               type: array
+     *               items:
+     *                 type: object
+     *                 properties:
+     *                   id:
+     *                     type: integer
+     *                   username:
+     *                     type: string
+     *                   user_level:
+     *                     type: string
+     *       500:
+     *         description: Failed to fetch users
+     */
+    this.app.get('/users', getUsersHandler); // Register the /users route
+  }
 
   public start() {
     this.app.listen(this.PORT, () => {
