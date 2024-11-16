@@ -19,7 +19,8 @@ import { createUserHandler } from './endpoints/createUser';
 import { updateUserHandler } from './endpoints/updateUser';
 import { encryptHandler } from './endpoints/encrypt';
 import { deleteUserHandler } from './endpoints/deleteUser';
-import { getUsersHandler } from './endpoints/rss'; // Importing the getUsersHandler
+import { getUsersHandler } from './endpoints/users';
+import { getOpmlHandler } from './endpoints/opml';
 
 // Extend the Express Request interface to include session
 interface Request extends ExpressRequest {
@@ -63,6 +64,7 @@ export default class RssServer {
     // Allow access to the public endpoints without a token
     if (
       req.path === '/' ||
+      req.path ===  '/opml' ||
       req.path === '/rss' ||
       req.path.startsWith('/swagger') ||
       req.path.startsWith('/login')
@@ -96,6 +98,7 @@ export default class RssServer {
       // Check user level for specific endpoints
       const endpointPermissions: { [key: string]: UserLevel[] } = {
         '/': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
+        '/opml': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
         '/rss': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
         '/rss_streams': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
         '/rss_streams/{id}': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
@@ -136,6 +139,19 @@ export default class RssServer {
      *         description: Failed to retrieve root response
      */
     this.app.get('/', getRootResponse); // Updated root endpoint
+
+    /**
+     * @swagger
+     * /opml:
+     *   get:
+     *     summary: Get OPML feed
+     *     responses:
+     *       200:
+     *         description: Successful response
+     *       500:
+     *         description: Failed to generate OPML feed
+     */
+    this.app.get('/opml', getOpmlHandler); // Register the /opml route
 
     /**
      * @swagger
