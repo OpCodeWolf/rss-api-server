@@ -9,7 +9,11 @@ services:
     ports:
       - "3000:3000"  # Adjust the port as necessary
     restart: always
-    # volumes:
-    #   - .:/app  # Mount the current directory to /app in the container
+    env_file:
+      - .env
     environment:
       NODE_ENV: production  # Set the environment variable as needed
+      DOMAIN_NAME: ${DOMAIN_NAME}
+      TITLE: ${TITLE}
+      VERSION: ${VERSION}
+      DESCRIPTION: ${DESCRIPTION}

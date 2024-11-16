@@ -11,7 +11,7 @@ export const getOpmlHandler = async (req: Request, res: Response) => {
                         $: {
                             text: 'RSS Feed',
                             type: 'rss',
-                            xmlUrl: 'http://localhost:3000/rss'
+                            xmlUrl: `http://${process.env.DOMAIN_NAME}/rss`
                         }
                     }
                 }
