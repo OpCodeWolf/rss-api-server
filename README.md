@@ -99,4 +99,4 @@ The API is documented using Swagger. You can view the documentation by navigatin
 http://localhost:3000/swagger
 ```
 
-This will provide you with an interactive interface to explore the available endpoints and their details.
+You can also view the API specification in the [rss-api-server-spec.md](rss-api-server-spec.md) file.
