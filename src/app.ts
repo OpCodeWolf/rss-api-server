@@ -2,16 +2,16 @@ import RssServer from './lib/RssServer';
 import CronJob from './lib/CronJob';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
-import cors from 'cors'; // Importing the cors package
+import cors from 'cors';
 
 // Swagger definition
 const swaggerOptions = {
   swaggerDefinition: {
     openapi: '3.0.0',
     info: {
-      title: 'API Documentation',
+      title: 'RSS API Server',
       version: '1.0.0',
-      description: 'API documentation for the project',
+      description: 'API documentation',
     },
     servers: [
       {
