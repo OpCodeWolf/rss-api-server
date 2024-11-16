@@ -39,7 +39,7 @@ To deploy the project as a Docker container, follow these steps:
 
 1. Build the Docker image:
    ```bash
-   npm build
+   npm run build
    ```
 
 2. Start the container:
