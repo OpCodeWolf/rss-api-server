@@ -15,7 +15,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: `http://${process.env.DOMAIN_NAME}`, // Update this URL based on your server configuration
+        url: process.env.SERVER_URL, // Use the SERVER_URL from the environment variable
       },
     ],
     components: {

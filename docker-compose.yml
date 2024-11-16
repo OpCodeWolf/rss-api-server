@@ -13,7 +13,8 @@ services:
       - .env
     environment:
       NODE_ENV: production  # Set the environment variable as needed
-      DOMAIN_NAME: ${DOMAIN_NAME}
+      SERVER_URL: ${SERVER_URL}
       TITLE: ${TITLE}
       VERSION: ${VERSION}
       DESCRIPTION: ${DESCRIPTION}
+      OPML_TITLE: ${OPML_TITLE}
