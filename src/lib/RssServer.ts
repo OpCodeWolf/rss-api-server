@@ -144,7 +144,7 @@ export default class RssServer {
      * @swagger
      * /opml:
      *   get:
-     *     summary: Get OPML feed
+     *     summary: Get OPML feed list
      *     responses:
      *       200:
      *         description: Successful response
