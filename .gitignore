@@ -4,3 +4,4 @@ rss.db
 # Ignore the node_modules directory
 node_modules/
 
+.env
