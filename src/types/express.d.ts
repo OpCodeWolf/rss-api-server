@@ -1,9 +1,13 @@
-import { Request as ExpressRequest } from 'express';
-import { UserLevel } from './UserLevel';
+import * as express from 'express';
 
-declare module 'express-serve-static-core' {
-  interface Request {
-    userId?: number;
-    userLevel?: UserLevel;
-  }
+declare global {
+    namespace Express {
+        interface Request {
+            session?: {
+                userId?: number; // Assuming userId is a number
+                userLevel?: UserLevel; // Assuming UserLevel is defined elsewhere
+                // Add other session properties as needed
+            };
+        }
+    }
 }
