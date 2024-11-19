@@ -3,6 +3,9 @@ import CronJob from './lib/CronJob';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsDoc from 'swagger-jsdoc';
 import cors from 'cors';
+import { getFeedPullFrequency } from './lib/endpoints/feedPullFrequency';
+import { getTotalFeeds } from './lib/endpoints/totalFeeds';
+import { getUserDownloadFrequency } from './lib/endpoints/userDownloadFrequency';
 
 // Swagger definition
 const swaggerOptions = {
