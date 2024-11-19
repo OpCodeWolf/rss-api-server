@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
-import { updateUserLevel, updateUserPassword, updateUserToken } from '../database';
-import bcrypt from 'bcrypt';
+import { updateUserLevel, updateUserPassword, updateUserToken, getUserByUsername, getUserByToken } from '../database';
+import { pbkdf2, randomBytes } from 'crypto';
 
 export const updateUserHandler = async (req: Request, res: Response) => {
     const { username, password, new_password, verify_password, token, user_level } = req.body;
@@ -10,6 +10,12 @@ export const updateUserHandler = async (req: Request, res: Response) => {
 
     if (!username) {
         return res.status(400).json({ error: 'Username is required' });
+    }
+
+    // Check if the username already exists
+    const existingUser = await getUserByUsername(username);
+    if (!existingUser) {
+        return res.status(404).json({ error: 'User not found' });
     }
 
     // Check if the password is being updated
@@ -24,25 +30,38 @@ export const updateUserHandler = async (req: Request, res: Response) => {
     }
 
     if (token) {
-        set_token = token; // Do some validation here in the future to prevent possible SQL injection
+        // Check if the token already exists for another user
+        const userWithToken = await getUserByToken(token);
+        if (userWithToken && userWithToken.username !== username) {
+            return res.status(400).json({ error: 'Token already in use by another user' });
+        }
+        set_token = token;
     } 
 
     if (user_level) {
-        set_level = user_level;
-        set_level = set_level.toLowerCase(); // Do some validation here in the future to prevent possible SQL injection
+        set_level = user_level.toLowerCase();
+        // Validate user level against accepted levels
+        const validUserLevels = ['admin', 'user', 'superadmin', 'public']; // Example levels
+        if (!validUserLevels.includes(set_level)) {
+            return res.status(400).json({ error: 'Invalid user level' });
+        }
     }
 
     try {
-        if (set_level) {
+        if (set_level !== null) {
             await updateUserLevel(username, set_level);
         }
         
-        if (set_password) {
-            const hash = await bcrypt.hash(set_password, 10);
-            await updateUserPassword(username, hash);
+        if (set_password !== null) {
+            const salt = randomBytes(16).toString('hex'); // Generate a new salt
+            pbkdf2(set_password, salt, 100000, 64, 'sha512', async (err, derivedKey) => {
+                if (err) throw err;
+                const hash = `${salt}$${derivedKey.toString('hex')}`; // Store salt and hash together
+                await updateUserPassword(username, hash);
+            });
         }
         
-        if (set_token) {
+        if (set_token !== null) {
             await updateUserToken(username, set_token);
         }
 
@@ -50,6 +69,9 @@ export const updateUserHandler = async (req: Request, res: Response) => {
             message: "User updated successfully"
         });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to update user' });
+        res.status(500).json({ 
+            error: 'Failed to update user',
+            message: error        
+        });
     }
 };

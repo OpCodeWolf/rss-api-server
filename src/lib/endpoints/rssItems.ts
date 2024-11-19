@@ -88,3 +88,13 @@ export const deleteRssItemHandler = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Failed to delete RSS item' });
     }
 };
+
+// New handler for counting RSS items
+export const getRssItemsCountHandler = async (req: Request, res: Response) => {
+    try {
+        const count = await getTotalRssItemsCount();
+        res.status(200).json({ count });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve RSS items count' });
+    }
+};

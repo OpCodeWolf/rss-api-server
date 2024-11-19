@@ -39,7 +39,7 @@ db.serialize(() => {
   // INSERT the default admin account
   db.run(
     `INSERT INTO users (username, password, token, user_level)
-      VALUES ('admin', '$2b$10$5cPFT52RiZJrH5GDta6T5OTEu60iOFs7pyrVr/HB9LECz3NANXg4W', '12345-12345-12345-12345', 'superadmin')`,
+      VALUES ('admin', '498fd89b34abaae5f6694f889d84ac86$7b504d7f883be55b1c41549707b99aac2a5d8ff81adfe30cad1f1cf89ca84278967c48cce477313b56e7795f6ef72e1ad52f9db9a1c03a52f57a1edf1cd16010', '12345-12345-12345-12345', 'superadmin')`,
     (err) => {
       if (err && err.message.includes('SQLITE_CONSTRAINT')) {
         // Intentionally left blank
@@ -56,7 +56,7 @@ db.serialize(() => {
 export const getAllUsers = (page: number = 1, pageSize: number = 10): Promise<{ id: number; username: string; user_level: string }[]> => {
   const offset = (page - 1) * pageSize;
   return new Promise((resolve, reject) => {
-    db.all(`SELECT id, username, user_level FROM users LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; username: string; user_level: string }[]) => {
+    db.all(`SELECT id, username, user_level, token FROM users LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; username: string; user_level: string }[]) => {
       if (err) {
         reject(err);
       } else {
@@ -252,9 +252,9 @@ export const deleteOldRssItems = (date: Date): Promise<void> => {
 };
 
 // New function to get user by username
-export const getUserByUsername = (username: string): Promise<{ id: number; username: string; password: string; token: string } | null> => {
+export const getUserByUsername = (username: string): Promise<{ id: number; username: string; password: string; token: string, user_level: string } | null> => {
   return new Promise((resolve, reject) => {
-    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err: Error | null, row: { id: number; username: string; password: string; token: string } | undefined) => {
+    db.get(`SELECT * FROM users WHERE username = ?`, [username], (err: Error | null, row: { id: number; username: string; password: string; token: string, user_level: string } | undefined) => {
       if (err) {
         reject(err);
       } else {
