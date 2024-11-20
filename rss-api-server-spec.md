@@ -37,6 +37,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
           <title>Item 1</title>
           <link>http://example.com/item1</link>
           <description>Description of item 1</description>
+          <image>http://example.com/image1.jpg</image>
         </item>
       </channel>
     </rss>
@@ -62,18 +63,22 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
 
 ## 4. GET /rss_streams
 - **Summary**: Get all RSS streams
-  - This endpoint retrieves a list of all RSS streams that have been added to the server. It returns an array of stream objects, each containing an ID and a link to the RSS feed.
+  - This endpoint retrieves a list of all RSS streams that have been added to the server. It returns an array of stream objects, each containing an ID, link, title, and description.
 - **Responses**:
   - **200**: 
     ```json
     [
       {
         "id": 1,
-        "link": "http://example.com/rss1"
+        "link": "http://example.com/rss1",
+        "title": "Example RSS Stream 1",
+        "description": "Description of RSS Stream 1"
       },
       {
         "id": 2,
-        "link": "http://example.com/rss2"
+        "link": "http://example.com/rss2",
+        "title": "Example RSS Stream 2",
+        "description": "Description of RSS Stream 2"
       }
     ]
     ```
@@ -230,7 +235,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
 
 ## 11. POST /login
 - **Summary**: User login
-  - This endpoint authenticates users by validating their credentials. Upon successful login, it returns a token that can be used for subsequent requests requiring authentication.
+  - This endpoint authenticates users by validating their credentials. Upon successful login, it returns a token and user level that can be used for subsequent requests requiring authentication.
 - **Request Body**:
   - **Required**: true
   - **Content**: application/json
@@ -240,7 +245,8 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     ```json
     {
       "message": "Successful login",
-      "token": "abc123"
+      "token": "c689b78d-53b4-47d2-82ad-456166c384ea",
+      "level": "user"
     }
     ```
   - **400**: 
@@ -281,7 +287,7 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
 
 ## 13. POST /create_user
 - **Summary**: Create a new user
-  - This endpoint allows for the registration of a new user by providing a username and password. It checks for existing usernames to prevent duplicates and returns the newly created user's ID upon success.
+  - This endpoint allows for the registration of a new user by providing a username and password. It checks for existing usernames to prevent duplicates and returns the newly created user's ID and token upon success.
 - **Request Body**:
   - **Required**: true
   - **Content**: application/json
@@ -291,7 +297,8 @@ The RSS API Server is a RESTful API designed to manage and serve RSS feeds. It p
     ```json
     {
       "message": "User created successfully",
-      "id": 1
+      "id": 1,
+      "token": "c689b78d-53b4-47d2-82ad-456166c384ea"
     }
     ```
   - **400**: 
