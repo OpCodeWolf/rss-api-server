@@ -154,6 +154,9 @@ export const updateRssItemInDatabase = (id: number, item: { title?: string; desc
     if (item.image) {
       fields.push('image = ?');
       values.push(item.image);
+    } else {
+      fields.push('image = ?');
+      values.push('');
     }
 
     if (item.deleted) {
