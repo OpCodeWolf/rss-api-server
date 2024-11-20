@@ -2,6 +2,9 @@
   "name": "rss-api-server",
   "version": "1.0.0",
   "main": "./src/app.ts",
+  "private": false,
+  "homepage": "https://github.com/OpCodeWolf/rss-api-server",
+
   "scripts": {
     "build": "docker compose build --no-cache",
     "start": "npx ts-node -r dotenv/config ./src/app.ts",
