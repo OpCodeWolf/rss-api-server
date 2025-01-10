@@ -27,6 +27,7 @@ export const updateRssFeedsHandler = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'No feed links found in the database' });
         }
 
+        // TODO: Break this apart into multiple methods
         for (const stream of streams) {
             console.log(`Updating RSS Stream: ${stream.link}`);
             const response = await axios.get(stream.link);
