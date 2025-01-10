@@ -1,0 +1,20 @@
+services:
+  rss-api-server:
+    container_name: rss-api-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # Adjust the port as necessary
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production  # Set the environment variable as needed
+      SERVER_URL: ${SERVER_URL}
+      TITLE: ${TITLE}
+      VERSION: ${VERSION}
+      DESCRIPTION: ${DESCRIPTION}
+      OPML_TITLE: ${OPML_TITLE}
+    volumes:
+      - ./rss.db:/usr/src/app/rss.db
