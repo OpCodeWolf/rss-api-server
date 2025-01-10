@@ -1,35 +1,20 @@
 import { Request, Response } from 'express';
-import { getAllRssStreams, deleteOldRssItems, insertRssItem, updateItemImage, getRssItem, getAllFilterItems, rssItemLinkExists } from '../database';
+import { getAllRssStreams, deleteOldRssItems, insertRssItem, getRssItem, getAllFilterItems, rssItemLinkExists } from '../database';
 import axios from 'axios';
 import xml2js from 'xml2js';
 import * as cheerio from 'cheerio';
 
 export const updateRssFeedsHandler = async (req: Request, res: Response) => {
 
-    const rejectedMediaTypes: string[] = [
-        '.pdf', '.exe', '.mpg', '.mp4', '.mp3', '.js', '.xml'
-    ];
-    
     let filterItems = await getAllFilterItems(0,999999999);
 
-    console.log(filterItems);
-
-    // const rejectedContains: string[] = [
-    //     'google.com',
-    //     'github.com',
-    //     'github.io',
-    //     'kit.edu',
-    //     'iotify.help',
-    //     '.mobi',
-    //     '.website',
-    //     'www.businessinsider.com'
-    // ];
-
     try {
+        // TODO: Make this configurable in a new settings API
         // Calculate the date one month ago
         const oneMonthAgo = new Date();
         oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
+        // TODO: Also make verbosity of log output configurable in the Settings API.
         console.log('Cleaning up old feed items..');
 
         // Delete old RSS items
@@ -53,12 +38,6 @@ export const updateRssFeedsHandler = async (req: Request, res: Response) => {
 
                 let rejectionFound = false;
 
-                for (let rejectedMediaType of rejectedMediaTypes) {
-                    if (String(item.link).endsWith(rejectedMediaType)) {
-                        rejectionFound = true;
-                    }
-                }
-            
                 for (let filterItem of filterItems) {
                     if (String(item.link).includes(filterItem.filter)) {
                         rejectionFound = true;
@@ -76,6 +55,7 @@ export const updateRssFeedsHandler = async (req: Request, res: Response) => {
                 }
             
                 if (rejectionFound) {
+                    // TODO: Add to a filtered item list for review in the UI.
                     console.log(`Filtered item: ${JSON.stringify(item)}`);
                     continue;
                 }
@@ -90,7 +70,7 @@ export const updateRssFeedsHandler = async (req: Request, res: Response) => {
                         imageUrl = item.image;
                     }
 
-                    imageUrl = await fetchImageUrl(item.link); // Fetching the image URL from the page
+                    imageUrl = await fetchImageUrl(item.link); // Fetch the image URL from the page
 
                     const rssItem = {
                         link: Array.isArray(item.link) ? item.link[0] : '',
@@ -102,28 +82,7 @@ export const updateRssFeedsHandler = async (req: Request, res: Response) => {
                     };
 
                     await insertRssItem(rssItem);
-
-
-                    // console.log(JSON.stringify(rssItem, null, 2));
-
-                    // const itemExists = await rssItemExists(rssItem.link);
-
-                    // if (!itemExists) {
-                    //     console.log(`Processing new item: ${item.title}`);
-                    //     await insertRssItem(rssItem);
-                    //     // If an image is not defined, attempt to get one from the article metadata
-                    //     if (item.image !== '') {
-                    //         imageUrl = await fetchImageUrl(item.link); // Fetching the image URL from the page
-                    //         if (imageUrl !== '') {
-                    //             console.log(`Storing image for item: ${imageUrl}`);
-                    //             // Add fetched image to the datbase
-                    //             await updateItemImage(item.link, imageUrl);
-                    //         }
-                    //     }
-                    // }
                 }
-
-
             }
         }
         console.log('RSS streams updated successfully');
@@ -133,7 +92,8 @@ export const updateRssFeedsHandler = async (req: Request, res: Response) => {
     }
 };
 
-// TODO: Was here
+// TODO: Left off here.. allow a one off request to refresh a specific feed item.
+// Endpoint and UI functionality has been implemented already.
 const refreshRssItem = async (link: string): Promise<void> => {
 
     const itemExists = await rssItemLinkExists(link);
@@ -171,42 +131,34 @@ const fetchImageUrl = async (link: string): Promise<string> => {
             const $ = cheerio.load(String(response.data));
 
             imageUrl = $('meta[property="og:image"]').attr('content');
-            console.log(`meta[property="og:image"] = ${imageUrl}`)
 
             // TODO: not sure if this is spec?
             if (imageUrl === null || imageUrl === '' || imageUrl === undefined) {
                 imageUrl = $('meta[property="og:image:url"]').attr('content');
-                console.log(`meta[property="og:image:url"] = ${imageUrl}`)
             }
 
             if (imageUrl === null || imageUrl === '' || imageUrl === undefined) {
                 imageUrl = $('meta[property="twitter:image"]').attr('content');
-                console.log(`meta[property="twitter:image"] = ${imageUrl}`)
             }
 
             if (imageUrl === null || imageUrl === '' || imageUrl === undefined) {
                 imageUrl = $('meta[name="twitter:image"]').attr('content');
-                console.log(`meta[name="twitter:image"] = ${imageUrl}`)
             }
 
             if (imageUrl === null || imageUrl === '' || imageUrl === undefined) {
                 imageUrl = $('meta[property="twitter:imageUrl"]').attr('content');
-                console.log(`meta[property="twitter:imageUrl"] = ${imageUrl}`)
             }
 
             if (imageUrl === null || imageUrl === '' || imageUrl === undefined) {
                 imageUrl = $('//header/div[@class="inner"]/a[@class="image avatar"]/img"]').attr('src');
-                console.log(`//header/div[@class="inner"]/a[@class="image avatar"]/img"] = ${imageUrl}`)
             }
 
             if (imageUrl === null || imageUrl === '' || imageUrl === undefined) {
                 imageUrl = $('//div[contains(@class,"article-issue-img")]/img').attr('src');
-                console.log(`//div[contains(@class,"article-issue-img")]/img = ${imageUrl}`)
             }
 
             if (imageUrl === null || imageUrl?.endsWith('missing.png') || imageUrl?.startsWith('blob') || imageUrl?.startsWith('data:image')) {
                 imageUrl = '';
-                console.log(`starts with blob = ${imageUrl}`)
             }
         }
 
@@ -222,6 +174,7 @@ const fetchImageUrl = async (link: string): Promise<string> => {
     }
 };
 
+// TODO: Move to a Utils class
 const convertDate = (isoDateString: string): string => {
     const date = new Date(isoDateString);
 
@@ -238,19 +191,20 @@ const convertDate = (isoDateString: string): string => {
     return `${year}-${day}, ${dayNumber} ${month} ${hours}:${minutes}:${seconds} ${timezone}`;
 };
 
+// TODO: Move to a Utils class
 function formatDate(isoDateString: string): string {
     const date = new Date(isoDateString);
-  
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
     const seconds = String(date.getSeconds()).padStart(2, '0');
-  
+
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+// TODO: Move to a Utils class
 function isValidRegex(regexString: string): boolean {
     try {
       new RegExp(regexString);
