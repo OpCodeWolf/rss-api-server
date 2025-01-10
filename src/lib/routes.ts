@@ -8,7 +8,7 @@ import { logout } from './endpoints/logout';
 import { getOpmlHandler } from './endpoints/opml';
 import { getRootResponse } from './endpoints/root';
 import { getRssFeedHandler } from './endpoints/rss';
-import { getAllRssItemsHandler, updateRssItemsHandler, deleteRssItemHandler, getRssItemsCountHandler } from './endpoints/rssItems';
+import { getAllRssItemsHandler, refreshRssItemHandler, updateRssItemsHandler, deleteRssItemHandler, getRssItemsCountHandler } from './endpoints/rssItems';
 import { addRssStreamHandler, getAllRssStreamsHandler } from './endpoints/rssStreams';
 import { updateRssFeedsHandler } from './endpoints/rssUpdateStreams';
 import { getTotalFeeds } from './endpoints/totalFeeds';
@@ -16,9 +16,11 @@ import { updateUserHandler } from './endpoints/updateUser';
 import { getUserDownloadFrequency } from './endpoints/userDownloadFrequency';
 import { getUsersHandler } from './endpoints/users';
 import { deleteUserHandler } from './endpoints/deleteUser'; 
+import { deleteFilterItemHandler, getAllFilterItemsHandler, updateFilterItemsHandler } from './endpoints/filterItems';
+import { logHandler } from './endpoints/logHandler';
 
 export function initializeRoutes(app: any) {
-    // Route definitions remain unchanged
+
     /**
      * @swagger
      * /:
@@ -165,6 +167,26 @@ export function initializeRoutes(app: any) {
 
     /**
      * @swagger
+     * /rss_items/{id}/refresh:
+     *   delete:
+     *     summary: Refresh an RSS item by ID
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         required: true
+     *         description: ID of the RSS item to refresh
+     *         schema:
+     *           type: integer
+     *     responses:
+     *       200:
+     *         description: RSS item refreshed successfully
+     *       500:
+     *         description: Failed to refresh RSS item
+     */
+    app.post('/rss_items/:id/refresh', refreshRssItemHandler);
+
+    /**
+     * @swagger
      * /rss_items/{id}:
      *   delete:
      *     summary: Delete an RSS item by ID
@@ -182,7 +204,7 @@ export function initializeRoutes(app: any) {
      *         description: Failed to delete RSS item
      */
      app.delete('/rss_items/:id', deleteRssItemHandler);
-     
+
     /**
      * @swagger
      * /rss_items:
@@ -229,6 +251,105 @@ export function initializeRoutes(app: any) {
      *         description: Failed to update RSS items
      */
     app.post('/rss_items', updateRssItemsHandler); // Updated update RSS items endpoint
+
+
+    /*******************************
+     * Filter Items
+     *******************************/
+
+    /**
+     * @swagger
+     * /filter_items:
+     *   get:
+     *     summary: Get all filter items
+     *     parameters:
+     *       - name: page
+     *         in: query
+     *         required: false
+     *         description: Page number
+     *         schema:
+     *           type: integer
+     *       - name: page_size
+     *         in: query
+     *         required: false
+     *         description: Number of items per page
+     *         schema:
+     *           type: integer
+     *     responses:
+     *       200:
+     *         description: Successful response
+     *       500:
+     *         description: Failed to retrieve filter items
+     */
+    app.get('/filter_items', getAllFilterItemsHandler); // Updated get all filter items endpoint
+
+    /**
+     * @swagger
+     * /filter_items/{id}:
+     *   delete:
+     *     summary: Delete a filter item by ID
+     *     parameters:
+     *       - name: id
+     *         in: path
+     *         required: true
+     *         description: ID of the filter item to delete
+     *         schema:
+     *           type: integer
+     *     responses:
+     *       200:
+     *         description: Filter item deleted successfully
+     *       500:
+     *         description: Failed to delete filter item
+     */
+    app.delete('/filter_items/:id', deleteFilterItemHandler);
+
+    /**
+     * @swagger
+     * /filter_items:
+     *   post:
+     *     summary: Update filter items
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             oneOf:
+     *               - type: object
+     *                 properties:
+     *                   id:
+     *                     type: integer
+     *                   filter:
+     *                     type: string
+     *                   title:
+     *                     type: string
+     *                   description:
+     *                     type: string
+     *               - type: array
+     *                 items:
+     *                   type: object
+     *                   properties:
+     *                     id:
+     *                       type: integer
+     *                     filter:
+     *                       type: string
+     *                     title:
+     *                       type: string
+     *                     description:
+     *                       type: string
+     *     responses:
+     *       200:
+     *         description: Filter item(s) updated or added successfully
+     *       400:
+     *         description: Invalid input
+     *       500:
+     *         description: Failed to update or add filter item(s)
+     */
+    app.post('/filter_items', updateFilterItemsHandler); // Updated update or add filter item(s) endpoint
+
+
+    /*******************************
+     * IAM
+     *******************************/
 
     /**
      * @swagger
@@ -427,6 +548,11 @@ export function initializeRoutes(app: any) {
      */
     app.get('/users', getUsersHandler); // Register the /users route
 
+
+    /*******************************
+     * Metrics
+     *******************************/
+
     /**
      * @swagger
      * /metrics/user-download-frequency:
@@ -478,4 +604,33 @@ export function initializeRoutes(app: any) {
      *         description: Failed to retrieve RSS items count
      */
     app.get('/metrics/item-count', getRssItemsCountHandler);
+
+
+    /*******************************
+     * Logging
+     *******************************/
+
+    /**
+     * @swagger
+     * /frontend-logs:
+     *   post:
+     *     summary: Error Logging
+     *     requestBody:
+     *       required: true
+     *       content:
+     *         application/json:
+     *           schema:
+     *             type: object
+     *     responses:
+     *       200:
+     *         description: Successful post
+     *       204:
+     *         description: Successful Options
+     *       403:
+     *         description: Access denied
+     *       500:
+     *         description: Failed to post log
+     */
+    app.post('/frontend-logs', logHandler); // Log endpoint
 }
+

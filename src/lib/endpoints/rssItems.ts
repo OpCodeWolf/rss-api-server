@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
 import { getAllRssItems, updateRssItemInDatabase, getTotalRssItemsCount, deleteRssItemById } from '../database';
+// import { refreshRssItem } from 
 
 export const getAllRssItemsHandler = async (req: Request, res: Response) => {
-    const { pubDateOrder = 'asc', page = '1', page_size = '20' } = req.query;
+    const { pubDateOrder = 'desc', page = '1', page_size = '20' } = req.query;
 
     const pageNumber = parseInt(page as string, 10);
     const pageSize = parseInt(page_size as string, 10);
@@ -28,7 +29,8 @@ export const getAllRssItemsHandler = async (req: Request, res: Response) => {
                 description: item.description,
                 pubDate: item.pubDate,
                 image: item.image,
-                deleted: item.deleted
+                deleted: item.deleted,
+                createdDate: item.dateTime
             })),
             page: pageNumber,
             total_pages: totalPages
@@ -52,6 +54,22 @@ export const updateRssItemsHandler = async (req: Request, res: Response) => {
             await updateRssItem(rssItems);
         } else {
             return res.status(400).json({ error: 'Invalid input. Must be an object or an array of objects.' });
+        }
+
+        res.status(200).json({ message: 'RSS items updated successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update RSS items' });
+    }
+};
+
+export const refreshRssItemHandler = async (req: Request, res: Response) => {
+    const id = req.body;
+
+    try {
+        if (id) {
+            // await refreshRssItem();
+        } else {
+            return res.status(400).json({ error: 'Invalid input. Must contain an id of an item to update.' });
         }
 
         res.status(200).json({ message: 'RSS items updated successfully' });

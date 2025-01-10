@@ -8,12 +8,69 @@ import { User } from '../types/User';
 
 const db = new sqlite3.Database('rss.db');
 
+// Migration function to ensure the 'deleted' column exists in the rss_items table
+const migrateDatabase = (): void => {
+  db.serialize(() => {
+    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='rss_items'`, (err: Error | null, row: { name: string } | undefined) => {
+      if (err) {
+        console.error(`Error checking if rss_items table exists: ${err}`);
+        return; // Exit if the table does not exist
+      }
+      if (!row) {
+        // Create the rss_items table if it does not exist
+        db.run(`CREATE TABLE rss_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          link TEXT UNIQUE NOT NULL,
+          title TEXT,
+          description TEXT,
+          pubDate TEXT,
+          dateTime TEXT,
+          image TEXT,
+          deleted INTEGER NOT NULL DEFAULT 0
+        )`, (err) => {
+          if (err) {
+            console.error(`Error creating rss_items table: ${err}`);
+          } else {
+            console.log(`rss_items table created.`);
+          }
+        });
+        return;
+      }
+      db.get(`PRAGMA table_info(rss_items)`, (err: Error | null, columns: Array<{ name: string }>) => {
+        if (err) {
+          console.error(`Error checking columns: ${err}`);
+          return;
+        }
+        console.log(JSON.stringify(columns));
+        if (Array.isArray(columns)) {
+          const hasDeletedColumn = columns.some(column => column.name === 'deleted');
+          if (!hasDeletedColumn) {
+            db.run(`ALTER TABLE rss_items ADD COLUMN deleted INTEGER NOT NULL DEFAULT 0`, (err) => {
+              if (err) {
+                console.error(`Error adding 'deleted' column: ${err}`);
+              } else {
+                console.log(`'deleted' column added to rss_items table.`);
+              }
+            });
+          }
+        } else {
+          console.error(`Columns information is undefined.`);
+        }
+      });
+    });
+  });
+}
+
+// Call the migration function on startup
+migrateDatabase();
+
 db.serialize(() => {
-  db.run(`CREATE TABLE IF NOT EXISTS rss_streams (
+  db.run(`CREATE TABLE IF NOT EXISTS filter_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    link TEXT UNIQUE NOT NULL,
+    filter TEXT UNIQUE NOT NULL,
     title TEXT,
-    description TEXT
+    description TEXT,
+    dateTime TEXT
   )`);
 
   db.run(`CREATE TABLE IF NOT EXISTS rss_items (
@@ -23,8 +80,15 @@ db.serialize(() => {
     description TEXT,
     pubDate TEXT,
     dateTime TEXT,
-    image TEXT
+    image TEXT,
     deleted INTEGER NOT NULL DEFAULT 0
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS rss_streams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    link TEXT UNIQUE NOT NULL,
+    title TEXT,
+    description TEXT
   )`);
 
   // Table for user accounts
@@ -52,20 +116,6 @@ db.serialize(() => {
   );
 });
 
-// New function to get all users with pagination
-export const getAllUsers = (page: number = 1, pageSize: number = 10): Promise<{ id: number; username: string; user_level: string }[]> => {
-  const offset = (page - 1) * pageSize;
-  return new Promise((resolve, reject) => {
-    db.all(`SELECT id, username, user_level, token FROM users LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; username: string; user_level: string }[]) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(rows);
-      }
-    });
-  });
-};
-
 interface RssFeed {
   rss: {
     channel: Array<{
@@ -82,6 +132,31 @@ interface RssFeed {
   };
 }
 
+interface RSSItemRow {
+  id: number;
+  link: string;
+  title: string;
+  description: string;
+  pubDate: string;
+  dateTime: string;
+  image: string;
+  deleted: boolean;
+}
+
+// Get all users with pagination
+export const getAllUsers = (page: number = 1, pageSize: number = 10): Promise<{ id: number; username: string; user_level: string }[]> => {
+  const offset = (page - 1) * pageSize;
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT id, username, user_level, token FROM users LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; username: string; user_level: string }[]) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+};
+
 export const addRssStream = (link: string): Promise<number|any> => {
   return new Promise((resolve, reject) => {
     axios.get(link)
@@ -91,6 +166,7 @@ export const addRssStream = (link: string): Promise<number|any> => {
           if (err) {
             return reject(err);
           }
+
           const titleArray = result?.rss.channel[0].title;
           const descriptionArray = result?.rss.channel[0].description;
           const title = Array.isArray(titleArray) && titleArray.length > 0 ? titleArray[0] : null;
@@ -113,19 +189,93 @@ export const addRssStream = (link: string): Promise<number|any> => {
   });
 };
 
-export const insertRssItem = (item: { link: string; title: string; description: string; pubDate: string; dateTime: string; image: string }): Promise<void> => {
+export const rssItemLinkExists = (link: string): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    if (!link) {
+      console.error('Invalid input: "link" is required');
+      return resolve(false);
+    }
+
+    db.all(
+      `SELECT * FROM rss_items WHERE (link) = (?)`, 
+      link, 
+      function (err: Error | null, rows: any) {
+        if (err) {
+          console.error(`DB Error: ${err.message}`);
+          return reject(err);
+        }
+
+        if (rows.length > 0) {
+          // console.log(`RSS Item exists in DB: ${link}`);
+          resolve(true);
+        } else {
+          // console.log(`RSS Item does not exist in DB: ${link}`);
+          resolve(false);
+        }
+      }
+    );
+  });
+};
+
+export const getRssItem = (link: string): Promise<{link: string; title: string; description: string; pubDate: string; dateTime: string; image: string}> => {
+  return new Promise((resolve, reject) => {
+    db.get (`SELECT link, title, description, pubDate, dateTime, image FROM rss_items WHERE link = ?`, [link], (err: Error | null, row: { 
+      link: string; title: string; description: string; pubDate: string; dateTime: string; image: string
+    }) => {
+      if (err) {
+        console.log(`DB Error: ${err}`);
+        reject(err);
+      } else {
+        resolve(row);
+      }
+    });
+  });
+}
+
+export const insertRssItem = (item: { link: string; title: string; description: string; pubDate: string; dateTime: string; image: string }): Promise<boolean> => {
   return new Promise((resolve, reject) => {
     db.run(`INSERT INTO rss_items (link, title, description, pubDate, dateTime, image, deleted) VALUES (?, ?, ?, ?, ?, ?, ?)`, [item.link, item.title, item.description, item.pubDate, item.dateTime, item.image, 0], function (err: Error | null) {
       if (err) {
         if (err.message.includes('UNIQUE constraint failed')) {
-          resolve(); // Ignore duplicates
+          resolve(false); // Ignore duplicates
         } else {
+          console.log(`ERR: ${err}`);
           reject(err);
         }
       } else {
-        resolve();
+        console.log(`Added item to DB: ${item.link}`);
+        resolve(true);
       }
     });
+
+  });
+};
+
+export const updateItemImage = (link: string, imageUrl: string): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    if (!link) {
+      return reject(new Error('Error: Image link is not set, nothing to update'));
+    }
+    console.log(`Adding image link: ${imageUrl} to item ${link}`);
+    
+    try {
+      db.run(
+        `UPDATE rss_items SET image = ? WHERE link = ?`,
+        [imageUrl, link],
+        function (err: Error | null) {
+          if (err) {
+            return reject(err); // Reject the promise if there's an error
+          }
+          if (this.changes === 0) {
+            // No rows were updated
+            return reject(new Error('No item found with the specified link to update.'));
+          }
+          resolve(true); // Successfully updated
+        }
+      );
+    } catch (error) {
+      reject(error); // Reject with the caught error
+    }
   });
 };
 
@@ -192,7 +342,7 @@ export const getAllRssStreams = (): Promise<{ id: number; link: string; title: s
   });
 };
 
-export const getAllRssItems = (pubDateOrder: 'asc' | 'desc' = 'asc', page: number = 1, pageSize: number = 20): Promise<{ id: number; link: string; title: string; description: string; pubDate: string; image: string, deleted: number }[]> => {
+export const getAllRssItems = (pubDateOrder: 'asc' | 'desc' = 'asc', page: number = 1, pageSize: number = 20): Promise<{ id: number; link: string; title: string; description: string; pubDate: string; dateTime: string, image: string, deleted: number }[]> => {
   const offset = (page - 1) * pageSize;
   return new Promise((resolve, reject) => {
     db.all(`SELECT id, link, title, description, pubDate, dateTime, image, deleted FROM rss_items WHERE deleted = 0 ORDER BY dateTime ${pubDateOrder} LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; link: string; title: string; description: string; pubDate: string; dateTime: string; image: string, deleted: number }[]) => {
@@ -372,3 +522,155 @@ export const getUserByToken = (token: string): Promise<{ id: number; username: s
     });
   });
 };
+
+
+/****************
+ * FILTER ITEMS
+ ****************/
+
+export const getAllFilterItems = (page: number = 1, pageSize: number = 20): Promise<{ id: number; filter: string; title: string; description: string, dateTime: string}[]> => {
+  const offset = (page - 1) * pageSize;
+  return new Promise((resolve, reject) => {
+    db.all(`SELECT id, filter, title, description, dateTime FROM filter_items ORDER BY dateTime asc LIMIT ? OFFSET ?`, [pageSize, offset], (err: Error | null, rows: { id: number; filter: string; title: string; description: string; dateTime: string }[]) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(rows);
+      }
+    });
+  });
+};
+
+// Add a new filter item
+export const addFilterItem = (item: { filter: string, title?: string; description?: string}): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const fields = [];
+    const values = [];
+
+    if (item.filter) {
+      fields.push('filter');
+      values.push(item.filter);
+    }
+    if (item.title) {
+      fields.push('title');
+      values.push(item.title);
+    }
+    if (item.description) {
+      fields.push('description');
+      values.push(item.description);
+    }
+
+    if (fields.length === 0) {
+      return reject(new Error('No fields to update'));
+    }
+
+    fields.push('dateTime');
+    values.push(formatDate(new Date().toISOString()));
+
+    let valuePlaceholders = [];
+    for (let key in values) {
+      valuePlaceholders.push('?');
+    }
+
+    console.log(JSON.stringify({fields, values, valuePlaceholders}, null, 2));
+
+    console.log(`INSERT INTO filter_items (${fields.join(', ')}) VALUES (${values.join(', ')})`);
+
+    db.run(`INSERT INTO filter_items (${fields.join(', ')}) VALUES (${valuePlaceholders.join(', ')})`, values, function (err: Error | null) {
+      if (err) {
+        console.log(`DB Error: ${err}`);
+        reject(err);
+      } else {
+        console.log(`Resolved`);
+        resolve();
+      }
+    });
+  });
+};
+
+export const getTotalFilterItemsCount = (): Promise<number> => {
+  return new Promise((resolve, reject) => {
+    db.get(`SELECT COUNT(*) AS count FROM filter_items`, [], (err: Error | null, row: { count: number }) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(row.count);
+      }
+    });
+  });
+};
+
+export const deleteFilterItemById = (id: number): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    db.run(`DELETE FROM filter_items WHERE id = ?`, [id], function (err: Error | null) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+};
+
+// New function to update or add a filter item
+export const updateOrAddFilterItemInDatabase = (item: { filter: string, id?: number, title?: string; description?: string}): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    const fields = [];
+    const values = [];
+
+    if (item.id) {
+
+      if (item.filter) {
+        fields.push('filter = ?');
+        values.push(item.filter);
+      }
+
+      if (item.title) {
+        fields.push('title = ?');
+        values.push(item.title);
+      }
+
+      if (item.description) {
+        fields.push('description = ?');
+        values.push(item.description);
+      }
+
+      if (fields.length === 0) {
+        return reject(new Error('No fields to update'));
+      }
+
+      values.push(item.id); // Add the ID to the end of the values array
+
+      console.log(JSON.stringify({fields, values}, null, 2));
+
+      db.run(`UPDATE filter_items SET ${fields.join(', ')} WHERE id = ?`, values, function (err: Error | null) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    } else {
+      addFilterItem({
+        filter: item.filter,
+        title: item.title,
+        description: item.description
+      }).then(() => {
+        resolve();
+      });
+    }
+  });
+};
+
+export const formatDate = (isoDateString: string): string => {
+  const date = new Date(isoDateString);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}

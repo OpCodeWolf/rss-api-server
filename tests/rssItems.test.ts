@@ -1,5 +1,5 @@
 import request from 'supertest';
-import RssServer from '../RssServer'; // Adjusting to point to the compiled output
+import RssServer from '../src/lib/RssServer'; // Adjusting to point to the compiled output
 
 const app = new RssServer().app;
 

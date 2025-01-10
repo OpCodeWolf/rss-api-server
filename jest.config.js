@@ -2,7 +2,7 @@
 module.exports = {
   testEnvironment: "node",
   moduleFileExtensions: ['ts', 'js'],
-  testMatch: ['**/src/**/*.test.ts'],
+  testMatch: ['**/tests/**/*.test.ts'],
   transform: {
     "^.+\\.tsx?$": ["ts-jest",{}],
   },

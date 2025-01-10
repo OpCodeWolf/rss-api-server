@@ -1,5 +1,5 @@
 import request from 'supertest';
-import RssServer from '../RssServer';
+import RssServer from '../src/lib/RssServer';
 
 const app = new RssServer().app;
 

@@ -1,8 +1,8 @@
 import request from 'supertest';
-import RssServer from '../RssServer';
-import * as database from '../database';
-import { UserLevel } from '../../types/UserLevel';
-import { User } from '../../types/User';
+import RssServer from '../src/lib/RssServer';
+import * as database from '../src/lib/database';
+import { UserLevel } from '../src/types/UserLevel';
+import { User } from '../src/types/User';
 
 const app = new RssServer().app;
 

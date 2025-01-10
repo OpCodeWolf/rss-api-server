@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   rss-api-server:
     container_name: rss-api-server
@@ -18,3 +16,5 @@ services:
       VERSION: ${VERSION}
       DESCRIPTION: ${DESCRIPTION}
       OPML_TITLE: ${OPML_TITLE}
+    volumes:
+      - ./rss.db:/usr/src/app/rss.db

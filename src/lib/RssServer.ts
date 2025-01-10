@@ -100,6 +100,8 @@ export default class RssServer {
           '/rss_update_streams': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/rss_items': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/rss_items/{id}': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
+          '/filter_items': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
+          '/filter_items/{id}': [UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/login': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/logout': [UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/create_user': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
@@ -109,6 +111,7 @@ export default class RssServer {
           '/feed-pull-frequency': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/total-feeds': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
           '/user-download-frequency': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
+          '/frontend-logs': [UserLevel.PUBLIC, UserLevel.USER, UserLevel.ADMIN, UserLevel.SUPERADMIN],
         };
 
         const requiredLevels = endpointPermissions[req.path];

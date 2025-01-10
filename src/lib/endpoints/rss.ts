@@ -1,22 +1,39 @@
 import { Request, Response } from 'express';
-import { getAllRssItems } from '../database'; // Assuming getAllRssItems exists
+import { getAllRssItems, getTotalRssItemsCount } from '../database'; // Assuming getAllRssItems exists
 import xml2js from 'xml2js';
 import { Database } from 'sqlite3';
-// import Request from '../../types/express';
 
 const db = new Database('rss.db');
 
 export const getRssFeedHandler = async (req: Request, res: Response) => {
     try {
-        const items = await getAllRssItems('desc', 1, 150); // Fetch latest 100 items
+        const { pubDateOrder = 'desc', page = '1', page_size = '1000' } = req.query;
+
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(page_size as string, 10);
+        
+        if (pubDateOrder !== 'asc' && pubDateOrder !== 'desc') {
+            return res.status(400).json({ error: 'Invalid pubDateOrder. Use "asc" or "desc".' });
+        }
+    
+        if (isNaN(pageNumber) || pageNumber < 1 || isNaN(pageSize) || pageSize < 1) {
+            return res.status(400).json({ error: 'Invalid pagination parameters.' });
+        }
+
+        const items = await getAllRssItems(pubDateOrder, pageNumber, pageSize);
+        const totalItems = await getTotalRssItemsCount();
+        const totalPages = Math.ceil(totalItems / pageSize);
+
         const rssItems = items.map(item => ({
             title: item.title,
             link: item.link,
             pubDate: item.pubDate,
             description: item.description,
-            image: item.image // Include the image in the RSS output
+            image: item.image, // Include the image in the RSS output
+            createdDate: item.dateTime
         }));
 
+        // TODO: Metrics
         // Insert a record into user_downloads table
         // console.log(`SESSION: ${JSON.stringify(req, ()=>{}, 2)}`);
         // let userId = -1; // Default to -1 for anonymous users
@@ -57,7 +74,7 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
                         item: rssItems.map(item => ({
                             title: item.title,
                             link: item.link,
-                            pubDate: item.pubDate,
+                            pubDate: convertDate(item.createdDate), // Using the servers created date instead of published date, so even old items show up in order of receipt
                             comments: item.link,
                             description: {
                                 _: `<a href="${item.link}">Comments</a>`,
@@ -79,7 +96,9 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
                             } : {})
                         }))
                     }
-                ]
+                ],
+                page: pageNumber,
+                total_pages: totalPages
             }
         };
 
@@ -91,4 +110,19 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
         console.error('Error generating RSS feed:', error); // Log the error
         res.status(500).json({ error: 'Failed to generate RSS feed' });
     }
+};
+
+const convertDate = (isoDateString: string): string => {
+    const date = new Date(isoDateString);
+
+    const day = date.toUTCString().split(",")[0]; // Get the day of the week
+    const dayNumber = date.getUTCDate().toString().padStart(2, "0");
+    const month = date.toLocaleString("en-US", { month: "short", timeZone: "UTC" });
+    const year = date.getUTCFullYear();
+    const hours = date.getUTCHours().toString().padStart(2, "0");
+    const minutes = date.getUTCMinutes().toString().padStart(2, "0");
+    const seconds = date.getUTCSeconds().toString().padStart(2, "0");
+    const timezone = "+0000"; // UTC timezone
+
+    return `${day}, ${dayNumber} ${month} ${year} ${hours}:${minutes}:${seconds} ${timezone}`;
 };
