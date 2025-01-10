@@ -118,6 +118,7 @@ db.serialize(() => {
   );
 });
 
+// TODO: Move to types directory
 interface RssFeed {
   rss: {
     channel: Array<{
@@ -134,6 +135,7 @@ interface RssFeed {
   };
 }
 
+// TODO: Move to types directory
 interface RSSItemRow {
   id: number;
   link: string;
@@ -144,6 +146,8 @@ interface RSSItemRow {
   image: string;
   deleted: boolean;
 }
+
+// TODO: Add method level documentation to be used in an external documentation tool
 
 // Get all users with pagination
 export const getAllUsers = (page: number = 1, pageSize: number = 10): Promise<{ id: number; username: string; user_level: string }[]> => {
@@ -208,10 +212,8 @@ export const rssItemLinkExists = (link: string): Promise<boolean> => {
         }
 
         if (rows.length > 0) {
-          // console.log(`RSS Item exists in DB: ${link}`);
           resolve(true);
         } else {
-          // console.log(`RSS Item does not exist in DB: ${link}`);
           resolve(false);
         }
       }
@@ -281,7 +283,7 @@ export const updateItemImage = (link: string, imageUrl: string): Promise<boolean
   });
 };
 
-// New function to update an RSS item
+// Update an RSS item
 export const updateRssItemInDatabase = (id: number, item: { title?: string; description?: string; link?: string; pubDate?: string; image?: string, deleted?: number }): Promise<void> => {
   return new Promise((resolve, reject) => {
     const fields = [];
@@ -393,7 +395,7 @@ export const deleteRssStreamById = (id: number): Promise<void> => {
   });
 };
 
-// New function to delete old RSS items
+// Delete old RSS items
 export const deleteOldRssItems = (date: Date): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.run(`DELETE FROM rss_items WHERE dateTime < ?`, [date.toISOString()], function (err: Error | null) {
@@ -406,7 +408,7 @@ export const deleteOldRssItems = (date: Date): Promise<void> => {
   });
 };
 
-// New function to get user by username
+// Get user by username
 export const getUserByUsername = (username: string): Promise<{ id: number; username: string; password: string; token: string, user_level: string } | null> => {
   return new Promise((resolve, reject) => {
     db.get(`SELECT * FROM users WHERE username = ?`, [username], (err: Error | null, row: { id: number; username: string; password: string; token: string, user_level: string } | undefined) => {
@@ -419,7 +421,7 @@ export const getUserByUsername = (username: string): Promise<{ id: number; usern
   });
 };
 
-// New function to create a user
+// Create a user
 export const createUser = async (username: string, password: string, user_level: UserLevel): Promise<User> => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -455,7 +457,7 @@ export const deleteUserByUsername = (username: string): Promise<void> => {
 };
 
 
-// New function to update user level
+// Update user level
 export const updateUserLevel = (username: string, newUserLevel: UserLevel): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.run(`UPDATE users SET user_level = ? WHERE username = ?`, [newUserLevel.toString(), username], function (err: Error | null) {
@@ -468,7 +470,7 @@ export const updateUserLevel = (username: string, newUserLevel: UserLevel): Prom
   });
 };
 
-// New function to update a user password
+// Update a user password
 export const updateUserPassword = (username: string, newPassword: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.run(`UPDATE users SET password = ? WHERE username = ?`, [newPassword, username], function (err: Error | null) {
@@ -481,7 +483,7 @@ export const updateUserPassword = (username: string, newPassword: string): Promi
   });
 };
 
-// New function to update a user password
+// Update a user password
 export const updateUserToken = (username: string, newToken: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.run(`UPDATE users SET token = ? WHERE username = ?`, [newToken, username], function (err: Error | null) {
@@ -494,12 +496,12 @@ export const updateUserToken = (username: string, newToken: string): Promise<voi
   });
 };
 
-// New function to generate a valid token
+// Generate a valid token
 export const generateValidToken = (): string => {
   return '' + Math.random().toString(36).substr(2); // Simple token generation
 };
 
-// New function to save the token
+// Save the token
 export const saveToken = (username: string, token: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.run(`UPDATE users SET token = ? WHERE username = ?`, [token, username], function (err: Error | null) {
@@ -512,7 +514,7 @@ export const saveToken = (username: string, token: string): Promise<void> => {
   });
 };
 
-// New function to get user by token
+// Get user by token
 export const getUserByToken = (token: string): Promise<{ id: number; username: string; password: string; token: string, user_level: UserLevel } | null> => {
   return new Promise((resolve, reject) => {
     db.get(`SELECT * FROM users WHERE token = ?`, [token], (err: Error | null, row: { id: number; username: string; password: string; token: string, user_level: UserLevel } | undefined) => {
@@ -574,10 +576,6 @@ export const addFilterItem = (item: { filter: string, title?: string; descriptio
       valuePlaceholders.push('?');
     }
 
-    console.log(JSON.stringify({fields, values, valuePlaceholders}, null, 2));
-
-    console.log(`INSERT INTO filter_items (${fields.join(', ')}) VALUES (${values.join(', ')})`);
-
     db.run(`INSERT INTO filter_items (${fields.join(', ')}) VALUES (${valuePlaceholders.join(', ')})`, values, function (err: Error | null) {
       if (err) {
         console.log(`DB Error: ${err}`);
@@ -614,7 +612,7 @@ export const deleteFilterItemById = (id: number): Promise<void> => {
   });
 };
 
-// New function to update or add a filter item
+// Update or add a filter item
 export const updateOrAddFilterItemInDatabase = (item: { filter: string, id?: number, title?: string; description?: string}): Promise<void> => {
   return new Promise((resolve, reject) => {
     const fields = [];
@@ -643,8 +641,6 @@ export const updateOrAddFilterItemInDatabase = (item: { filter: string, id?: num
 
       values.push(item.id); // Add the ID to the end of the values array
 
-      console.log(JSON.stringify({fields, values}, null, 2));
-
       db.run(`UPDATE filter_items SET ${fields.join(', ')} WHERE id = ?`, values, function (err: Error | null) {
         if (err) {
           reject(err);
@@ -664,9 +660,9 @@ export const updateOrAddFilterItemInDatabase = (item: { filter: string, id?: num
   });
 };
 
+// TODO: Move to a Utils class (duplicate)
 export const formatDate = (isoDateString: string): string => {
   const date = new Date(isoDateString);
-
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
   const day = String(date.getDate()).padStart(2, '0');
