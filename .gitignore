@@ -1,0 +1,11 @@
+# Ignore the SQLite database file
+rss.db
+
+# Ignore the node_modules directory
+node_modules/
+
+# Ignore the private environment config
+.env
+
+# Ignore lock files, as they can be recreated (Note: not removed from the docker file creation)
+package-lock.json
