@@ -8,6 +8,8 @@ import { User } from '../types/User';
 
 const db = new sqlite3.Database('rss.db');
 
+// TODO: Setup a migration tool with sql files for all database changes
+
 // Migration function to ensure the 'deleted' column exists in the rss_items table
 const migrateDatabase = (): void => {
   db.serialize(() => {
