@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { getAllRssItems, getTotalRssItemsCount } from '../database'; // Assuming getAllRssItems exists
 import xml2js from 'xml2js';
 import { Database } from 'sqlite3';
-// import Request from '../../types/express';
 
 const db = new Database('rss.db');
 
@@ -34,6 +33,7 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
             createdDate: item.dateTime
         }));
 
+        // TODO: Metrics
         // Insert a record into user_downloads table
         // console.log(`SESSION: ${JSON.stringify(req, ()=>{}, 2)}`);
         // let userId = -1; // Default to -1 for anonymous users
@@ -94,8 +94,6 @@ export const getRssFeedHandler = async (req: Request, res: Response) => {
                                     }
                                 }
                             } : {})
-                            // createdDate: item.createdDate
-
                         }))
                     }
                 ],
