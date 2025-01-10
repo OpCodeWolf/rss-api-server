@@ -11,6 +11,8 @@ export default class CronJob {
     }
   
     public start() {
+      // TODO: make this configurable in the Settings API
+
       // Schedule the job to run every hour (on the 0th minute)
       /**
        *             ┌────────────── second (optional)
@@ -21,7 +23,7 @@ export default class CronJob {
        *             │ │ │ │ │ ┌──── day of week
        *             │ │ │ │ │ │
        *             │ │ │ │ │ │
-       *             * * * * * *    
+       *             * * * * * *           
        */
       cron.schedule('  0 * * * *', async () => {
         console.log('Updating RSS feeds...');
